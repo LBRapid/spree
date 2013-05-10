@@ -119,7 +119,8 @@ toggleItemEdit = function(){
   link.parents('tr').find('td.item-qty-edit').toggle();
 }
 
-startItemSplit = function(){
+startItemSplit = function(event){
+  event.preventDefault();
   var link = $(this);
   link.parent().find('a.edit-item').toggle();
   link.parent().find('a.split-item').toggle();
@@ -143,7 +144,7 @@ startItemSplit = function(){
   });
 
   var split_item_template = Handlebars.compile($('#variant_split_template').text()); 
-  link.closest('tr').after(split_item_template({ variant: variant }));
+  link.closest('tr').after(split_item_template({ variant: variant, shipments: shipments }));
   $('a.cancel-split').click(cancelItemSplit);
   $('a.save-split').click(completeItemSplit);
 
@@ -154,16 +155,79 @@ startItemSplit = function(){
     fadeOutTime: 50,
     intentPollInterval: 300
   });
-  $('#stock-item-split-location').select2({ width: 'resolve' });
+  $('#stock-item-split-location').select2({ width: 'resolve', placeholder: 'Choose Location' });
 }
 
-completeItemSplit = function() {
+completeItemSplit = function(event) {
+  event.preventDefault();
   var link = $(this);
-  var stock_location_id = link.closest('tr').find('#stock-item-split-location').val();
-  console.log(stock_location_id);
+  var stock_item_row = link.closest('tr');
+  var variant_id = stock_item_row.data('variant-id');
+  var stock_location_id = stock_item_row.find('#stock-item-split-location').val();
+  var quantity = stock_item_row.find('#item_quantity').val();
+  var original_shipment_number = link.closest('tbody').data('shipment-number');
+  var order_number = link.closest('tbody').data('order-number');
+  var new_shipment = stock_item_row.find($('#stock-item-split-location').select2('data').element).data('new-shipment');
+  
+  if (stock_location_id == 'new_shipment') {
+  } else { // move item to a shipment at a different stock location
+    var shipment = _.find(shipments, function(shipment){
+      return shipment.stock_location_id == stock_location_id && (shipment.state == 'ready' || shipment.state == 'pending');
+    });
+
+    if(shipment==undefined || new_shipment != undefined){ // If a shipment doesn't exist for this location already, create a new one
+      $.ajax({
+        type: "POST",
+        async: false,
+        url: Spree.url("/api/orders/" + order_number + "/shipments.json"),
+        data: { variant_id: variant_id, quantity: quantity, stock_location_id: stock_location_id }
+      }).done(function( msg ) {
+        
+      }).error(function( msg ) {
+        console.log(msg);
+      });
+
+      // remove item from original shipment
+      $.ajax({
+        type: "PUT",
+        async: false,
+        url: Spree.url("/api/orders/" + order_number + "/shipments/" + original_shipment_number + "/remove.json"),
+        data: { variant_id: variant_id, quantity: quantity }
+      }).done(function( msg ) {
+        window.location.reload();
+      }).error(function( msg ) {
+        console.log(msg);
+      });
+    } else { // if shipment alreadys exists for this location, add variant to it
+      $.ajax({
+        type: "PUT",
+        async: false,
+        url: Spree.url("/api/orders/" + order_number + "/shipments/" + shipment.number + "/add.json"),
+        data: { variant_id: variant_id, quantity: quantity }
+      }).done(function( msg ) {
+        console.log("Added");
+      }).error(function( msg ) {
+        console.log(msg);
+      });
+
+      // remove item from original shipment
+      $.ajax({
+        type: "PUT",
+        async: false,
+        url: Spree.url("/api/orders/" + order_number + "/shipments/" + original_shipment_number + "/remove.json"),
+        data: { variant_id: variant_id, quantity: quantity }
+      }).done(function( msg ) {
+        console.log("Removed");
+        window.location.reload();
+      }).error(function( msg ) {
+        console.log(msg);
+      });
+    }
+  }
 }
 
-cancelItemSplit = function() {
+cancelItemSplit = function(event) {
+  event.preventDefault();
   var link = $(this);
   var prev_row = link.closest('tr').prev();
   link.closest('tr').remove();

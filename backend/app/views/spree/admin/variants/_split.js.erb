@@ -1,14 +1,21 @@
 <script type='text/template' id='variant_split_template'>
-  <tr class='stock-item-split'>
+  <tr class='stock-item-split' data-variant-id='{{variant.id}}'>
     <td colspan='2'>
       Move {{variant.name}} to:
     </td>
     <td colspan='2'>
     <select id='stock-item-split-location' style='width:100%;'>
-        {{#each variant.stock_items}}
-          <option value='{{this.stock_location_id}}'>{{this.stock_location_name}}</option>
+      <option></option>
+      <optgroup label="Existing Shipments">
+        {{#each shipments}}
+        <option value='{{this.stock_location_id}}'>{{this.stock_location.name}}({{this.number}})</option>
         {{/each}}
-          <option>New Shipment</option>
+      </optgroup>
+      <optgroup label="New Shipment At Location">
+        {{#each variant.stock_items}}
+          <option data-new-shipment='true' value='{{this.stock_location_id}}'>{{this.stock_location_name}}</option>
+        {{/each}}
+      </optgroup>
       </select>
     </td>
     <td>

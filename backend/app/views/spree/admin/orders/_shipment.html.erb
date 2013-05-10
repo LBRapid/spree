@@ -31,7 +31,7 @@
     <th class="orders-actions actions" data-hook="admin_order_form_line_items_header_actions"></th>
   </thead>
 
-  <tbody>
+  <tbody data-shipment-number="<%= shipment.number %>" data-order-number="<%= order.number %>">
     <% shipment.manifest.each do |item| %>
       <% line_item = order.find_line_item_by_variant(item.variant) %>
 
