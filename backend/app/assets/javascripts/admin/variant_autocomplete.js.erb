@@ -156,7 +156,7 @@ startItemSplit = function(event){
     fadeOutTime: 50,
     intentPollInterval: 300
   });
-  $('#stock-item-split-location').select2({ width: 'resolve', placeholder: 'Choose Location' });
+  $('#item_stock_location').select2({ width: 'resolve', placeholder: 'Choose Location' });
 }
 
 completeItemSplit = function(event) {
@@ -164,11 +164,11 @@ completeItemSplit = function(event) {
   var link = $(this);
   var stock_item_row = link.closest('tr');
   var variant_id = stock_item_row.data('variant-id');
-  var stock_location_id = stock_item_row.find('#stock-item-split-location').val();
+  var stock_location_id = stock_item_row.find('#item_stock_location').val();
   var quantity = stock_item_row.find('#item_quantity').val();
   var original_shipment_number = link.closest('tbody').data('shipment-number');
   var order_number = link.closest('tbody').data('order-number');
-  var new_shipment = stock_item_row.find($('#stock-item-split-location').select2('data').element).data('new-shipment');
+  var new_shipment = stock_item_row.find($('#item_stock_location').select2('data').element).data('new-shipment');
   
   if (stock_location_id == 'new_shipment') {
   } else { // move item to a shipment at a different stock location
