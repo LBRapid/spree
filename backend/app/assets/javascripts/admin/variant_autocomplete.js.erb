@@ -188,7 +188,7 @@ completeItemSplit = function(event) {
         console.log(msg);
       });
 
-      // remove item from original shipment
+      // remove item(s) from original shipment
       $.ajax({
         type: "PUT",
         async: false,
@@ -200,18 +200,8 @@ completeItemSplit = function(event) {
         console.log(msg);
       });
     } else { // if shipment alreadys exists for this location, add variant to it
-      $.ajax({
-        type: "PUT",
-        async: false,
-        url: Spree.url("/api/orders/" + order_number + "/shipments/" + shipment.number + "/add.json"),
-        data: { variant_id: variant_id, quantity: quantity }
-      }).done(function( msg ) {
-        console.log("Added");
-      }).error(function( msg ) {
-        console.log(msg);
-      });
-
-      // remove item from original shipment
+      adjustItems(shipment.number, variant_id, quantity);
+      // remove item(s) from original shipment
       $.ajax({
         type: "PUT",
         async: false,
